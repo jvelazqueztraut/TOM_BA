@@ -3,13 +3,12 @@
 //--------------------------------------------------------------
 void ofApp::setup() {
     
-#ifndef FARNE_USE_CAMERA
-    videoSource.load("TOM_Original_480p.mov");
-    videoSource.play();
-#endif
-#ifdef FARNE_USE_CAMERA
+#ifdef USE_CAMERA
     videoSource.setDesiredFrameRate(30);
     videoSource.initGrabber(640, 480);
+#else
+    videoSource.load("TOM_Original_480p.mov");
+    videoSource.play();
 #endif
     
     flowSolver.setup(videoSource.getWidth(), videoSource.getHeight(), 0.35, 5, 10, 1, 3, 2.25, false, false);

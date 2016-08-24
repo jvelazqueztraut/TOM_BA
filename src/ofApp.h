@@ -3,7 +3,7 @@
 #include "ofMain.h"
 #include "ofxOpticalFlowFarneback.h"
 
-//#define FARNE_USE_CAMERA
+//#define USE_CAMERA
 
 class ofApp : public ofBaseApp{
 
@@ -24,11 +24,10 @@ class ofApp : public ofBaseApp{
 		void dragEvent(ofDragInfo dragInfo);
 		void gotMessage(ofMessage msg);
     
-#ifndef FARNE_USE_CAMERA
-    ofVideoPlayer videoSource;
-#endif
-#ifdef FARNE_USE_CAMERA
+#ifdef USE_CAMERA
     ofVideoGrabber videoSource;
+#else
+    ofVideoPlayer videoSource;
 #endif
     
     ofxOpticalFlowFarneback flowSolver;
