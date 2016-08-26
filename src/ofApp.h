@@ -38,4 +38,6 @@ class ofApp : public ofBaseApp{
     ofxCvGrayscaleImage flowRight,flowLeft;
     
     ofxCv::ContourFinder contourFinderRight,contourFinderLeft;
+    
+    float backgroundMoving,vehiclesMoving;
 };

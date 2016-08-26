@@ -41,6 +41,9 @@ void ofApp::setup() {
     // an object can move up to 32 pixels per frame
     contourFinderLeft.getTracker().setMaximumDistance(50);
     
+    backgroundMoving=1.0f;
+    vehiclesMoving=1.0f;
+    
     ofEnableAlphaBlending();
     ofSetBackgroundAuto(true);
     ofBackground(0);
@@ -75,6 +78,40 @@ void ofApp::update() {
         
         contourFinderRight.findContours(flowRight);
         contourFinderLeft.findContours(flowLeft);
+        
+        vector<float> blobAreas;
+        float accumulatedArea = 0.0f;
+        for(int i = 0; i < contourFinderRight.size(); i++){
+            blobAreas.push_back(contourFinderRight.getMinAreaRect(i).boundingRect().area());
+            accumulatedArea += blobAreas.back();
+        }
+        for(int i = 0; i < contourFinderLeft.size(); i++){
+            blobAreas.push_back(contourFinderLeft.getMinAreaRect(i).boundingRect().area());
+            accumulatedArea += blobAreas.back();
+        }
+        
+        std::sort(blobAreas.begin(),blobAreas.end());
+        
+        //this means the biggest blob found is most probably also the background
+        if(blobAreas.size() && blobAreas.front() > (videoSource.getWidth()*videoSource.getHeight()*0.45f)){
+            backgroundMoving = 1.0f;
+            accumulatedArea -= blobAreas.front();
+        }
+        else{
+            backgroundMoving -= 0.1f;
+            if(backgroundMoving<=0.0f)
+                backgroundMoving=0.0f;
+        }
+        
+        if(accumulatedArea > (videoSource.getWidth()*videoSource.getHeight()*0.1f)){
+            vehiclesMoving=1.0f;
+        }
+        else{
+            vehiclesMoving -= 0.1f;
+            if(vehiclesMoving<=0.0f)
+                vehiclesMoving=0.0f;
+        }
+        
 #ifdef _DEBUG
         flowRight.updateTexture();
         flowLeft.updateTexture();
@@ -111,7 +148,7 @@ void ofApp::draw() {
         ofVec2f velocity = ofxCv::toOf(contourFinderRight.getVelocity(i));
         ofScale(5, 5);
         ofPushStyle();
-        ofSetColor(0,255,255);
+        ofSetColor(0,0,255);
         ofSetLineWidth(5.0f);
         ofDrawLine(0, 0, velocity.x, velocity.y);
         ofPopStyle();
@@ -134,12 +171,40 @@ void ofApp::draw() {
         ofVec2f velocity = ofxCv::toOf(contourFinderLeft.getVelocity(i));
         ofScale(5, 5);
         ofPushStyle();
-        ofSetColor(255,255,0);
+        ofSetColor(255,0,0);
         ofSetLineWidth(5.0f);
         ofDrawLine(0, 0, velocity.x, velocity.y);
         ofPopStyle();
         ofPopMatrix();
     }
+    ofPopMatrix();
+    
+    ofPushMatrix();
+    ofTranslate(ofGetWidth()*0.5,ofGetHeight()*0.5);
+    ofScale(50,50);
+    ofPushStyle();
+    ofSetRectMode(ofRectMode::OF_RECTMODE_CENTER);
+    ofSetColor(0);
+    ofDrawRectangle(0,0,1.1,4.1);
+    ofSetColor(255);
+    ofNoFill();
+    ofDrawCircle(0,-1.5,0.5);
+    ofDrawCircle(0,0,0.5);
+    ofDrawCircle(0,1.5,0.5);
+    ofFill();
+    if(vehiclesMoving){
+        ofSetColor(255,0,0);
+        ofDrawCircle(0,-1.5,0.5);
+    }
+    if(backgroundMoving){
+        ofSetColor(255,255,0);
+        ofDrawCircle(0,0,0.5);
+    }
+    if(!vehiclesMoving && !backgroundMoving){
+        ofSetColor(0,255,0);
+        ofDrawCircle(0,1.5,0.5);
+    }
+    ofPopStyle();
     ofPopMatrix();
 #endif
     
@@ -159,6 +224,7 @@ void ofApp::draw() {
 
 //--------------------------------------------------------------
 void ofApp::keyPressed(int key) {
+#ifdef _DEBUG
     if(key == 'p') { flowSolver.setPyramidScale(ofClamp(flowSolver.getPyramidScale() - 0.01,0.0,1.0)); }
     else if(key == 'P') { flowSolver.setPyramidScale(ofClamp(flowSolver.getPyramidScale() + 0.01,0.0,1.0)); }
     else if(key == 'l') { flowSolver.setPyramidLevels(MAX(flowSolver.getPyramidLevels() - 1,1)); }
@@ -175,6 +241,7 @@ void ofApp::keyPressed(int key) {
     else if(key == 'F') { flowSolver.setFlowFeedback(true); }
     else if(key == 'g') { flowSolver.setGaussianFiltering(false); }
     else if(key == 'G') { flowSolver.setGaussianFiltering(true); }
+#endif
 }
 
 //--------------------------------------------------------------
