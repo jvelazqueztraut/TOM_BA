@@ -9,15 +9,22 @@ void ofApp::setup() {
 #else
     videoSource.load("TOM_Original_480p.mov");
     videoSource.play();
+    videoSource.setVolume(0.0f);
 #endif
     
     flowSolver.setup(videoSource.getWidth(), videoSource.getHeight(), 0.35, 5, 10, 1, 3, 2.25, false, false);
+    flow.allocate(videoSource.getWidth(),videoSource.getHeight(),GL_RGBA);
+    flowPixels.allocate(videoSource.getWidth(),videoSource.getHeight(),4);
+    flowRight.allocate(videoSource.getWidth(),videoSource.getHeight());
+    flowRight.setUseTexture(true);
+    flowLeft.allocate(videoSource.getWidth(),videoSource.getHeight());
+    flowLeft.setUseTexture(true);
     
     ofEnableAlphaBlending();
     ofSetBackgroundAuto(true);
     ofBackground(0);
     
-    ofSetWindowShape(videoSource.getWidth(), videoSource.getHeight());
+    ofSetWindowShape(videoSource.getWidth()*2, videoSource.getHeight()*2);
 }
 
 //--------------------------------------------------------------
@@ -25,19 +32,53 @@ void ofApp::update() {
     videoSource.update();
     if(videoSource.isFrameNew()) {
         flowSolver.update(videoSource);
+        
+        flow.begin();
+        ofClear(0,0);
+        flowSolver.drawColored(videoSource.getWidth(), videoSource.getHeight(), 1, 1);
+        flow.end();
+        
+        flow.readToPixels(flowPixels);
+        //flow.readToPixels(flowImage.getPixels());
+        flowRight.setFromPixels(flowPixels.getChannel(0));
+        flowLeft.setFromPixels(flowPixels.getChannel(2));
+        
+        flowRight.threshold(100);
+        flowLeft.threshold(100);
+        
+        flowRight.dilate();
+        flowRight.erode();
+        
+        flowLeft.dilate();
+        flowLeft.erode();
+        
+        flowRight.updateTexture();
+        flowLeft.updateTexture();
     }
 }
 
 //--------------------------------------------------------------
 void ofApp::draw() {
-    
-    ofSetColor(0);
-    ofFill();
-    ofRectangle(0,0,ofGetWidth(),ofGetHeight());
+    ofEnableAlphaBlending();
     
     ofSetColor(255, 255, 255);
+    videoSource.draw(0, 0,videoSource.getWidth(), videoSource.getHeight());
+    
+    ofPushMatrix();
+    ofTranslate(videoSource.getWidth(),0);
     videoSource.draw(0, 0);
-    flowSolver.drawColored(videoSource.getWidth(), videoSource.getHeight(), 10, 3);
+    flow.draw(0,0);
+    ofPopMatrix();
+    
+    ofPushMatrix();
+    ofTranslate(0,videoSource.getHeight());
+    flowRight.draw(0,0);
+    ofPopMatrix();
+    
+    ofPushMatrix();
+    ofTranslate(videoSource.getWidth(),videoSource.getHeight());
+    flowLeft.draw(0,0);
+    ofPopMatrix();
     
     stringstream m;
     m << "fps " << ofGetFrameRate() << endl

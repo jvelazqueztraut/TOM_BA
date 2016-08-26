@@ -31,5 +31,7 @@ class ofApp : public ofBaseApp{
 #endif
     
     ofxOpticalFlowFarneback flowSolver;
-		
+    ofFbo flow;
+    ofPixels flowPixels;
+    ofxCvGrayscaleImage flowRight,flowLeft;
 };
