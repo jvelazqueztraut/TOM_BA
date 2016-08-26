@@ -16,9 +16,30 @@ void ofApp::setup() {
     flow.allocate(videoSource.getWidth(),videoSource.getHeight(),GL_RGBA);
     flowPixels.allocate(videoSource.getWidth(),videoSource.getHeight(),4);
     flowRight.allocate(videoSource.getWidth(),videoSource.getHeight());
-    flowRight.setUseTexture(true);
     flowLeft.allocate(videoSource.getWidth(),videoSource.getHeight());
+#ifdef _DEBUG
+    flowRight.setUseTexture(true);
     flowLeft.setUseTexture(true);
+#else
+    flowRight.setUseTexture(false);
+    flowLeft.setUseTexture(false);
+#endif
+    
+    contourFinderRight.setMinAreaRadius(videoSource.getWidth()*0.05f);
+    contourFinderRight.setMaxAreaRadius(videoSource.getWidth());
+    contourFinderRight.setThreshold(100);
+    // wait for half a frame before forgetting something
+    contourFinderRight.getTracker().setPersistence(15);
+    // an object can move up to 32 pixels per frame
+    contourFinderRight.getTracker().setMaximumDistance(50);
+    
+    contourFinderLeft.setMinAreaRadius(videoSource.getWidth()*0.05f);
+    contourFinderLeft.setMaxAreaRadius(videoSource.getWidth());
+    contourFinderLeft.setThreshold(100);
+    // wait for half a frame before forgetting something
+    contourFinderLeft.getTracker().setPersistence(15);
+    // an object can move up to 32 pixels per frame
+    contourFinderLeft.getTracker().setMaximumDistance(50);
     
     ofEnableAlphaBlending();
     ofSetBackgroundAuto(true);
@@ -43,8 +64,8 @@ void ofApp::update() {
         flowRight.setFromPixels(flowPixels.getChannel(0));
         flowLeft.setFromPixels(flowPixels.getChannel(2));
         
-        flowRight.threshold(100);
-        flowLeft.threshold(100);
+        //flowRight.threshold(100);
+        //flowLeft.threshold(100);
         
         flowRight.dilate();
         flowRight.erode();
@@ -52,13 +73,18 @@ void ofApp::update() {
         flowLeft.dilate();
         flowLeft.erode();
         
+        contourFinderRight.findContours(flowRight);
+        contourFinderLeft.findContours(flowLeft);
+#ifdef _DEBUG
         flowRight.updateTexture();
         flowLeft.updateTexture();
+#endif
     }
 }
 
 //--------------------------------------------------------------
 void ofApp::draw() {
+#ifdef _DEBUG
     ofEnableAlphaBlending();
     
     ofSetColor(255, 255, 255);
@@ -73,12 +99,49 @@ void ofApp::draw() {
     ofPushMatrix();
     ofTranslate(0,videoSource.getHeight());
     flowRight.draw(0,0);
+    contourFinderRight.draw();
+    ofxCv::RectTracker& trackerRight = contourFinderRight.getTracker();
+    for(int i = 0; i < contourFinderRight.size(); i++) {
+        ofPoint center = ofxCv::toOf(contourFinderRight.getCenter(i));
+        ofPushMatrix();
+        ofTranslate(center.x, center.y);
+        int label = contourFinderRight.getLabel(i);
+        string msg = ofToString(label) + ":" + ofToString(trackerRight.getAge(label));
+        ofDrawBitmapStringHighlight(msg, 0, 0);
+        ofVec2f velocity = ofxCv::toOf(contourFinderRight.getVelocity(i));
+        ofScale(5, 5);
+        ofPushStyle();
+        ofSetColor(0,255,255);
+        ofSetLineWidth(5.0f);
+        ofDrawLine(0, 0, velocity.x, velocity.y);
+        ofPopStyle();
+        ofPopMatrix();
+    }
     ofPopMatrix();
     
     ofPushMatrix();
     ofTranslate(videoSource.getWidth(),videoSource.getHeight());
     flowLeft.draw(0,0);
+    contourFinderLeft.draw();
+    ofxCv::RectTracker& trackerLeft = contourFinderLeft.getTracker();
+    for(int i = 0; i < contourFinderLeft.size(); i++) {
+        ofPoint center = ofxCv::toOf(contourFinderLeft.getCenter(i));
+        ofPushMatrix();
+        ofTranslate(center.x, center.y);
+        int label = contourFinderLeft.getLabel(i);
+        string msg = ofToString(label) + ":" + ofToString(trackerLeft.getAge(label));
+        ofDrawBitmapStringHighlight(msg, 0, 0);
+        ofVec2f velocity = ofxCv::toOf(contourFinderLeft.getVelocity(i));
+        ofScale(5, 5);
+        ofPushStyle();
+        ofSetColor(255,255,0);
+        ofSetLineWidth(5.0f);
+        ofDrawLine(0, 0, velocity.x, velocity.y);
+        ofPopStyle();
+        ofPopMatrix();
+    }
     ofPopMatrix();
+#endif
     
     stringstream m;
     m << "fps " << ofGetFrameRate() << endl
