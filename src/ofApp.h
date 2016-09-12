@@ -39,4 +39,6 @@ class ofApp : public ofBaseApp{
     ofxCvContourFinder contourFinderRight,contourFinderLeft;
     
     float backgroundMoving,vehiclesMoving;
+    
+    float time;
 };

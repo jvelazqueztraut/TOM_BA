@@ -33,10 +33,16 @@ void ofApp::setup() {
     ofBackground(0);
     
     ofSetWindowShape(videoSource.getWidth()*2, videoSource.getHeight()*2);
+    
+    time = ofGetElapsedTimef();
 }
 
 //--------------------------------------------------------------
 void ofApp::update() {
+    float t = ofGetElapsedTimef();
+    float dt = t - time;
+    time = t;
+    
     videoSource.update();
     if(videoSource.isFrameNew()) {
         flowSolver.update(videoSource);
@@ -90,7 +96,7 @@ void ofApp::update() {
             accumulatedArea -= blobAreas.front();
         }
         else{
-            backgroundMoving -= 0.1f;
+            backgroundMoving -= dt;
             if(backgroundMoving<=0.0f)
                 backgroundMoving=0.0f;
         }
@@ -99,7 +105,7 @@ void ofApp::update() {
             vehiclesMoving=1.0f;
         }
         else{
-            vehiclesMoving -= 0.1f;
+            vehiclesMoving -= dt;
             if(vehiclesMoving<=0.0f)
                 vehiclesMoving=0.0f;
         }
