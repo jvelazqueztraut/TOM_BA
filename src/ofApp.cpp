@@ -1,5 +1,8 @@
 #include "ofApp.h"
 
+#define BACKGROUND_TIMEOUT 0.5f
+#define VEHICLE_TIMEOUT 1.0f
+
 //--------------------------------------------------------------
 void ofApp::setup() {
     
@@ -92,7 +95,7 @@ void ofApp::update() {
         
         //this means the biggest blob found is most probably also the background
         if(blobAreas.size() && blobAreas.front() > (videoSource.getWidth()*videoSource.getHeight()*0.45f)){
-            backgroundMoving = 1.0f;
+            backgroundMoving = BACKGROUND_TIMEOUT;
             accumulatedArea -= blobAreas.front();
         }
         else{
@@ -102,7 +105,7 @@ void ofApp::update() {
         }
         
         if(accumulatedArea > (videoSource.getWidth()*videoSource.getHeight()*0.1f)){
-            vehiclesMoving=1.0f;
+            vehiclesMoving = VEHICLE_TIMEOUT;
         }
         else{
             vehiclesMoving -= dt;
