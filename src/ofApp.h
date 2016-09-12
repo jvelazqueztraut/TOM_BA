@@ -2,7 +2,6 @@
 
 #include "ofMain.h"
 #include "ofxOpticalFlowFarneback.h"
-#include "ofxCv.h"
 
 //#define USE_CAMERA
 #define _DEBUG
@@ -37,7 +36,7 @@ class ofApp : public ofBaseApp{
     ofPixels flowPixels;
     ofxCvGrayscaleImage flowRight,flowLeft;
     
-    ofxCv::ContourFinder contourFinderRight,contourFinderLeft;
+    ofxCvContourFinder contourFinderRight,contourFinderLeft;
     
     float backgroundMoving,vehiclesMoving;
 };

@@ -25,22 +25,6 @@ void ofApp::setup() {
     flowLeft.setUseTexture(false);
 #endif
     
-    contourFinderRight.setMinAreaRadius(videoSource.getWidth()*0.05f);
-    contourFinderRight.setMaxAreaRadius(videoSource.getWidth());
-    contourFinderRight.setThreshold(100);
-    // wait for half a frame before forgetting something
-    contourFinderRight.getTracker().setPersistence(15);
-    // an object can move up to 32 pixels per frame
-    contourFinderRight.getTracker().setMaximumDistance(50);
-    
-    contourFinderLeft.setMinAreaRadius(videoSource.getWidth()*0.05f);
-    contourFinderLeft.setMaxAreaRadius(videoSource.getWidth());
-    contourFinderLeft.setThreshold(100);
-    // wait for half a frame before forgetting something
-    contourFinderLeft.getTracker().setPersistence(15);
-    // an object can move up to 32 pixels per frame
-    contourFinderLeft.getTracker().setMaximumDistance(50);
-    
     backgroundMoving=1.0f;
     vehiclesMoving=1.0f;
     
@@ -67,8 +51,8 @@ void ofApp::update() {
         flowRight.setFromPixels(flowPixels.getChannel(0));
         flowLeft.setFromPixels(flowPixels.getChannel(2));
         
-        //flowRight.threshold(100);
-        //flowLeft.threshold(100);
+        flowRight.threshold(100);
+        flowLeft.threshold(100);
         
         flowRight.dilate();
         flowRight.erode();
@@ -76,17 +60,25 @@ void ofApp::update() {
         flowLeft.dilate();
         flowLeft.erode();
         
-        contourFinderRight.findContours(flowRight);
-        contourFinderLeft.findContours(flowLeft);
+        contourFinderRight.findContours(flowRight,
+                                        videoSource.getWidth()*videoSource.getHeight()*0.05f,
+                                        videoSource.getWidth()*videoSource.getHeight()*0.90f,
+                                        10,
+                                        false);
+        contourFinderLeft.findContours(flowLeft,
+                                       videoSource.getWidth()*videoSource.getHeight()*0.05f,
+                                       videoSource.getWidth()*videoSource.getHeight()*0.90f,
+                                       10,
+                                       false);
         
         vector<float> blobAreas;
         float accumulatedArea = 0.0f;
-        for(int i = 0; i < contourFinderRight.size(); i++){
-            blobAreas.push_back(contourFinderRight.getMinAreaRect(i).boundingRect().area());
+        for(int i = 0; i < contourFinderRight.nBlobs; i++){
+            blobAreas.push_back(contourFinderRight.blobs[i].area);
             accumulatedArea += blobAreas.back();
         }
-        for(int i = 0; i < contourFinderLeft.size(); i++){
-            blobAreas.push_back(contourFinderLeft.getMinAreaRect(i).boundingRect().area());
+        for(int i = 0; i < contourFinderLeft.nBlobs; i++){
+            blobAreas.push_back(contourFinderLeft.blobs[i].area);
             accumulatedArea += blobAreas.back();
         }
         
@@ -137,21 +129,11 @@ void ofApp::draw() {
     ofTranslate(0,videoSource.getHeight());
     flowRight.draw(0,0);
     contourFinderRight.draw();
-    ofxCv::RectTracker& trackerRight = contourFinderRight.getTracker();
-    for(int i = 0; i < contourFinderRight.size(); i++) {
-        ofPoint center = ofxCv::toOf(contourFinderRight.getCenter(i));
+    for(int i = 0; i < contourFinderRight.nBlobs; i++) {
+        ofPoint center = contourFinderRight.blobs[i].boundingRect.getCenter();
         ofPushMatrix();
         ofTranslate(center.x, center.y);
-        int label = contourFinderRight.getLabel(i);
-        string msg = ofToString(label) + ":" + ofToString(trackerRight.getAge(label));
-        ofDrawBitmapStringHighlight(msg, 0, 0);
-        ofVec2f velocity = ofxCv::toOf(contourFinderRight.getVelocity(i));
-        ofScale(5, 5);
-        ofPushStyle();
-        ofSetColor(0,0,255);
-        ofSetLineWidth(5.0f);
-        ofDrawLine(0, 0, velocity.x, velocity.y);
-        ofPopStyle();
+        ofDrawBitmapStringHighlight(ofToString(i), 0, 0);
         ofPopMatrix();
     }
     ofPopMatrix();
@@ -160,21 +142,11 @@ void ofApp::draw() {
     ofTranslate(videoSource.getWidth(),videoSource.getHeight());
     flowLeft.draw(0,0);
     contourFinderLeft.draw();
-    ofxCv::RectTracker& trackerLeft = contourFinderLeft.getTracker();
-    for(int i = 0; i < contourFinderLeft.size(); i++) {
-        ofPoint center = ofxCv::toOf(contourFinderLeft.getCenter(i));
+    for(int i = 0; i < contourFinderLeft.nBlobs; i++) {
+        ofPoint center = contourFinderLeft.blobs[i].boundingRect.getCenter();
         ofPushMatrix();
         ofTranslate(center.x, center.y);
-        int label = contourFinderLeft.getLabel(i);
-        string msg = ofToString(label) + ":" + ofToString(trackerLeft.getAge(label));
-        ofDrawBitmapStringHighlight(msg, 0, 0);
-        ofVec2f velocity = ofxCv::toOf(contourFinderLeft.getVelocity(i));
-        ofScale(5, 5);
-        ofPushStyle();
-        ofSetColor(255,0,0);
-        ofSetLineWidth(5.0f);
-        ofDrawLine(0, 0, velocity.x, velocity.y);
-        ofPopStyle();
+        ofDrawBitmapStringHighlight(ofToString(i), 0, 0);
         ofPopMatrix();
     }
     ofPopMatrix();
