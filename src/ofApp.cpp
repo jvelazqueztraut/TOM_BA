@@ -28,8 +28,8 @@ void ofApp::setup() {
     flowLeft.setUseTexture(false);
 #endif
     
-    backgroundMoving=1.0f;
-    vehiclesMoving=1.0f;
+    backgroundMoving=BACKGROUND_TIMEOUT;
+    vehiclesMoving=VEHICLE_TIMEOUT;
     
     ofEnableAlphaBlending();
     ofSetBackgroundAuto(true);
