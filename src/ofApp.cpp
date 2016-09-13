@@ -104,7 +104,7 @@ void ofApp::update() {
                 backgroundMoving=0.0f;
         }
         
-        if(accumulatedArea > (videoSource.getWidth()*videoSource.getHeight()*0.1f)){
+        if(accumulatedArea > (videoSource.getWidth()*videoSource.getHeight()*0.075f)){
             vehiclesMoving = VEHICLE_TIMEOUT;
         }
         else{
