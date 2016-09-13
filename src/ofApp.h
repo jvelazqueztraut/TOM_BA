@@ -2,8 +2,9 @@
 
 #include "ofMain.h"
 #include "ofxOpticalFlowFarneback.h"
+#include "ofxRPiCameraVideoGrabber.h"
 
-//#define USE_CAMERA
+#define USE_CAMERA
 #define _DEBUG
 
 class ofApp : public ofBaseApp{
@@ -26,7 +27,7 @@ class ofApp : public ofBaseApp{
 		void gotMessage(ofMessage msg);
     
 #ifdef USE_CAMERA
-    ofVideoGrabber videoSource;
+    ofxRPiCameraVideoGrabber videoSource;
 #else
     ofVideoPlayer videoSource;
 #endif

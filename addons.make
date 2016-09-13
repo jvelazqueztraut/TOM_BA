@@ -1,2 +1,3 @@
 ofxOpenCv
 ofxOpticalFlowFarneback
+ofxRPiCameraVideoGrabber

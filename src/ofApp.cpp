@@ -10,8 +10,17 @@
 void ofApp::setup() {
     
 #ifdef USE_CAMERA
-    videoSource.setDesiredFrameRate(30);
-    videoSource.initGrabber(640, 480);
+    OMXCameraSettings omxCameraSettings;
+    omxCameraSettings.width = 640;
+    omxCameraSettings.height = 480;
+    omxCameraSettings.framerate = 30;
+    omxCameraSettings.enablePixels = true;
+#ifdef _DEBUG
+    omxCameraSettings.enableTexture = true;
+#else
+    omxCameraSettings.enableTexture = false;
+#endif
+    videoGrabber.setup(omxCameraSettings);
 #else
     videoSource.load("TOM_Original_480p.mov");
     videoSource.play();
@@ -56,9 +65,11 @@ void ofApp::update() {
     float dt = t - time;
     time = t;
     
+#ifndef USE_CAMERA
     videoSource.update();
+#endif
     if(videoSource.isFrameNew()) {
-        flowSolver.update(videoSource);
+        flowSolver.update(videoSource.getPixels(),videoSource.getWidth(),videoSource.getHeight(),OF_IMAGE_COLOR);
         
         flow.begin();
         ofClear(0,0);
