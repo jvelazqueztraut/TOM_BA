@@ -3,6 +3,9 @@
 #define BACKGROUND_TIMEOUT 0.5f
 #define VEHICLE_TIMEOUT 1.0f
 
+#define STOP_PERIOD 2.0f
+#define START_PERIOD 1.0f
+
 //--------------------------------------------------------------
 void ofApp::setup() {
     
@@ -14,6 +17,9 @@ void ofApp::setup() {
     videoSource.play();
     videoSource.setVolume(0.0f);
 #endif
+    
+    stopSound.load("stop.mp3");
+    startSound.load("start.mp3");
     
     flowSolver.setup(videoSource.getWidth(), videoSource.getHeight(), 0.35, 5, 10, 1, 3, 2.25, false, false);
     flow.allocate(videoSource.getWidth(),videoSource.getHeight(),GL_RGBA);
@@ -30,6 +36,10 @@ void ofApp::setup() {
     
     backgroundMoving=BACKGROUND_TIMEOUT;
     vehiclesMoving=VEHICLE_TIMEOUT;
+    
+    stopSoundPlay=true;
+    stopSoundTimer=0.0f;
+    startSoundTimer=START_PERIOD;
     
     ofEnableAlphaBlending();
     ofSetBackgroundAuto(true);
@@ -118,6 +128,33 @@ void ofApp::update() {
         flowLeft.updateTexture();
 #endif
     }
+    
+    if(backgroundMoving>0 || vehiclesMoving>0){
+        if(!stopSoundPlay)
+            stopSoundTimer=0.0f;
+        stopSoundPlay=true;
+    }
+    else{
+        if(stopSoundPlay)
+            startSoundTimer = START_PERIOD;
+        stopSoundPlay=false;
+    }
+    if(stopSoundPlay){
+        stopSoundTimer-=dt;
+        if(stopSoundTimer<=0.0f){
+            stopSound.play();
+            stopSoundTimer = STOP_PERIOD;
+        }
+    }
+    else{
+        startSoundTimer-=dt;
+        if(startSoundTimer<=0.0f){
+            startSound.play();
+            startSoundTimer = START_PERIOD;
+        }
+    }
+    
+    ofSoundUpdate();
 }
 
 //--------------------------------------------------------------

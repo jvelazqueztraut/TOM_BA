@@ -40,5 +40,9 @@ class ofApp : public ofBaseApp{
     
     float backgroundMoving,vehiclesMoving;
     
+    ofSoundPlayer stopSound,startSound;
+    float stopSoundTimer,startSoundTimer;
+    bool stopSoundPlay;
+    
     float time;
 };
