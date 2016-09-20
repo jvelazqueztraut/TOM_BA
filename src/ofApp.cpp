@@ -77,7 +77,15 @@ void ofApp::update() {
     videoSource.update();
 #endif
     if(videoSource.isFrameNew()) {
-        originalImage.setFromPixels(videoSource.getPixels(), width, height);
+	unsigned char * videoSourcePixels = videoSource.getPixels();
+	unsigned char * originalImagePixels = originalImage.getPixels().getData();
+	for(int x = 0; x < width; x++){
+		for(int y = 0; y < height; y++){
+			originalImagePixels[int(x+y*width)*3 + 0] = videoSourcePixels[int(x+y*width)*4 + 0];
+			originalImagePixels[int(x+y*width)*3 + 1] = videoSourcePixels[int(x+y*width)*4 + 1];
+			originalImagePixels[int(x+y*width)*3 + 2] = videoSourcePixels[int(x+y*width)*4 + 2];
+		}
+	}
         processingImage.scaleIntoMe(originalImage);
         
         flowSolver.update(processingImage);
