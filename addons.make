@@ -1,2 +1,2 @@
-ofxMIOFlowGLSL
 ofxOpenCv
+ofxOpticalFlowFarneback
