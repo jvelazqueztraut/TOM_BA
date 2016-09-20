@@ -1,7 +1,8 @@
 #pragma once
 
 #include "ofMain.h"
-#include "ofxOpticalFlowFarneback.h"
+#include "ofxOpenCv.h"
+#include "ofxMIOFlowGLSL.h"
 
 //#define USE_CAMERA
 #define _DEBUG
@@ -31,7 +32,7 @@ class ofApp : public ofBaseApp{
     ofVideoPlayer videoSource;
 #endif
     
-    ofxOpticalFlowFarneback flowSolver;
+    ofxMioFlowGLSL flowSolver;
     ofFbo flow;
     ofPixels flowPixels;
     ofxCvGrayscaleImage flowRight,flowLeft;
