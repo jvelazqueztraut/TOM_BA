@@ -31,6 +31,8 @@ class ofApp : public ofBaseApp{
     ofVideoPlayer videoSource;
 #endif
     
+    ofxCvColorImage originalImage,processingImage;
+    float width,height;
     ofxOpticalFlowFarneback flowSolver;
     ofFbo flow;
     ofPixels flowPixels;

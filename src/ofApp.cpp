@@ -6,6 +6,8 @@
 #define STOP_PERIOD 2.0f
 #define START_PERIOD 1.0f
 
+#define PROCESSING_SCALE 0.5f
+
 //--------------------------------------------------------------
 void ofApp::setup() {
     
@@ -21,11 +23,17 @@ void ofApp::setup() {
     stopSound.load("stop.mp3");
     startSound.load("start.mp3");
     
-    flowSolver.setup(videoSource.getWidth(), videoSource.getHeight(), 0.35, 5, 10, 1, 3, 2.25, false, false);
-    flow.allocate(videoSource.getWidth(),videoSource.getHeight(),GL_RGBA);
-    flowPixels.allocate(videoSource.getWidth(),videoSource.getHeight(),4);
-    flowRight.allocate(videoSource.getWidth(),videoSource.getHeight());
-    flowLeft.allocate(videoSource.getWidth(),videoSource.getHeight());
+    width = videoSource.getWidth()*PROCESSING_SCALE;
+    height = videoSource.getHeight()*PROCESSING_SCALE;
+    
+    originalImage.allocate(videoSource.getWidth(), videoSource.getHeight());
+    processingImage.allocate(width, height);
+    
+    flowSolver.setup(width, height, 0.35, 5, 10, 1, 3, 2.25, false, false);
+    flow.allocate(width, height,GL_RGBA);
+    flowPixels.allocate(width, height,4);
+    flowRight.allocate(width, height);
+    flowLeft.allocate(width, height);
 #ifdef _DEBUG
     flowRight.setUseTexture(true);
     flowLeft.setUseTexture(true);
@@ -45,7 +53,7 @@ void ofApp::setup() {
     ofSetBackgroundAuto(true);
     ofBackground(0);
     
-    ofSetWindowShape(videoSource.getWidth()*2, videoSource.getHeight()*2);
+    ofSetWindowShape(width*2, height*2);
     
     time = ofGetElapsedTimef();
 }
@@ -58,11 +66,14 @@ void ofApp::update() {
     
     videoSource.update();
     if(videoSource.isFrameNew()) {
-        flowSolver.update(videoSource);
+        originalImage.setFromPixels(videoSource.getPixels());
+        processingImage.scaleIntoMe(originalImage);
+        
+        flowSolver.update(processingImage);
         
         flow.begin();
         ofClear(0,0);
-        flowSolver.drawColored(videoSource.getWidth(), videoSource.getHeight(), 1, 1);
+        flowSolver.drawColored(width, height, 1, 1);
         flow.end();
         
         flow.readToPixels(flowPixels);
@@ -70,8 +81,8 @@ void ofApp::update() {
         flowRight.setFromPixels(flowPixels.getChannel(0));
         flowLeft.setFromPixels(flowPixels.getChannel(2));
         
-        flowRight.threshold(100);
-        flowLeft.threshold(100);
+        flowRight.threshold(50);
+        flowLeft.threshold(50);
         
         flowRight.dilate();
         flowRight.erode();
@@ -80,13 +91,13 @@ void ofApp::update() {
         flowLeft.erode();
         
         contourFinderRight.findContours(flowRight,
-                                        videoSource.getWidth()*videoSource.getHeight()*0.05f,
-                                        videoSource.getWidth()*videoSource.getHeight()*0.90f,
+                                        width*height*0.05f,
+                                        width*height*0.90f,
                                         10,
                                         false);
         contourFinderLeft.findContours(flowLeft,
-                                       videoSource.getWidth()*videoSource.getHeight()*0.05f,
-                                       videoSource.getWidth()*videoSource.getHeight()*0.90f,
+                                       width*height*0.05f,
+                                       width*height*0.90f,
                                        10,
                                        false);
         
@@ -104,7 +115,7 @@ void ofApp::update() {
         std::sort(blobAreas.begin(),blobAreas.end());
         
         //this means the biggest blob found is most probably also the background
-        if(blobAreas.size() && blobAreas.front() > (videoSource.getWidth()*videoSource.getHeight()*0.45f)){
+        if(blobAreas.size() && blobAreas.front() > (width*height*0.45f)){
             backgroundMoving = BACKGROUND_TIMEOUT;
             accumulatedArea -= blobAreas.front();
         }
@@ -114,7 +125,7 @@ void ofApp::update() {
                 backgroundMoving=0.0f;
         }
         
-        if(accumulatedArea > (videoSource.getWidth()*videoSource.getHeight()*0.075f)){
+        if(accumulatedArea > (width*height*0.075f)){
             vehiclesMoving = VEHICLE_TIMEOUT;
         }
         else{
@@ -163,16 +174,16 @@ void ofApp::draw() {
     ofEnableAlphaBlending();
     
     ofSetColor(255, 255, 255);
-    videoSource.draw(0, 0,videoSource.getWidth(), videoSource.getHeight());
+    videoSource.draw(0, 0, width, height);
     
     ofPushMatrix();
-    ofTranslate(videoSource.getWidth(),0);
-    videoSource.draw(0, 0);
+    ofTranslate(width, 0);
+    videoSource.draw(0, 0, width, height);
     flow.draw(0,0);
     ofPopMatrix();
     
     ofPushMatrix();
-    ofTranslate(0,videoSource.getHeight());
+    ofTranslate(0, height);
     flowRight.draw(0,0);
     contourFinderRight.draw();
     for(int i = 0; i < contourFinderRight.nBlobs; i++) {
@@ -185,7 +196,7 @@ void ofApp::draw() {
     ofPopMatrix();
     
     ofPushMatrix();
-    ofTranslate(videoSource.getWidth(),videoSource.getHeight());
+    ofTranslate(width, height);
     flowLeft.draw(0,0);
     contourFinderLeft.draw();
     for(int i = 0; i < contourFinderLeft.nBlobs; i++) {
