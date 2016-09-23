@@ -6,10 +6,11 @@
 #define STOP_PERIOD 2.0f
 #define START_PERIOD 1.0f
 
-#define PROCESSING_SCALE 0.5f
+#define PROCESSING_SCALE 0.25f
 
 //--------------------------------------------------------------
 void ofApp::setup() {
+    ofSetWindowPosition(100,100);
     
 #ifdef USE_CAMERA
     OMXCameraSettings omxCameraSettings;
@@ -34,7 +35,7 @@ void ofApp::setup() {
     
     width = videoSource.getWidth()*PROCESSING_SCALE;
     height = videoSource.getHeight()*PROCESSING_SCALE;
-    
+
     originalImage.allocate(videoSource.getWidth(), videoSource.getHeight());
     processingImage.allocate(width, height);
     
@@ -79,20 +80,19 @@ void ofApp::update() {
     if(videoSource.isFrameNew()) {
 	unsigned char * videoSourcePixels = videoSource.getPixels();
 	unsigned char * originalImagePixels = originalImage.getPixels().getData();
-	for(int x = 0; x < width; x++){
-		for(int y = 0; y < height; y++){
-			originalImagePixels[int(x+y*width)*3 + 0] = videoSourcePixels[int(x+y*width)*4 + 0];
-			originalImagePixels[int(x+y*width)*3 + 1] = videoSourcePixels[int(x+y*width)*4 + 1];
-			originalImagePixels[int(x+y*width)*3 + 2] = videoSourcePixels[int(x+y*width)*4 + 2];
+	for(int x = 0; x < videoSource.getWidth(); x++){
+		for(int y = 0; y < videoSource.getHeight(); y++){
+			originalImagePixels[int(x+y*videoSource.getWidth())*3 + 0] = videoSourcePixels[int(x+y*videoSource.getWidth())*4 + 0];
+			originalImagePixels[int(x+y*videoSource.getWidth())*3 + 1] = videoSourcePixels[int(x+y*videoSource.getWidth())*4 + 1];
+			originalImagePixels[int(x+y*videoSource.getWidth())*3 + 2] = videoSourcePixels[int(x+y*videoSource.getWidth())*4 + 2];
 		}
 	}
         processingImage.scaleIntoMe(originalImage);
-        
         flowSolver.update(processingImage);
         
         flow.begin();
         ofClear(0,0);
-        flowSolver.drawColored(width, height, 1, 1);
+        flowSolver.drawColored(width, height, 10, 3);
         flow.end();
         
         flow.readToPixels(flowPixels);
@@ -193,7 +193,7 @@ void ofApp::draw() {
     
     ofSetColor(255, 255, 255);
     videoSource.draw(0, 0, width, height);
-    
+
     ofPushMatrix();
     ofTranslate(width, 0);
     videoSource.draw(0, 0, width, height);
