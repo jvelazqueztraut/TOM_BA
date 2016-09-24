@@ -46,6 +46,8 @@ class ofApp : public ofBaseApp{
     ofSoundPlayer stopSound,startSound;
     float stopSoundTimer,startSoundTimer;
     bool stopSoundPlay;
-    
+    vector<ofSoundPlayer> holaSounds;
+    vector<ofSoundPlayer> siCruzaSounds;
+    vector<ofSoundPlayer> noCruzaSounds;
     float time;
 };

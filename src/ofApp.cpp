@@ -33,7 +33,29 @@ void ofApp::setup() {
     
     stopSound.load("stop.mp3");
     startSound.load("start.mp3");
-    
+
+    int i = 1;
+    do{
+	ofSoundPlayer newSound;
+	newSound.load("Audios/Bienvenida" + ofToString(i) + ".wav");
+	holaSounds.push_back(newSound);
+    }while(ofFile::doesFileExist(ofToDataPath("Audios/Bienvenida" + ofToString(++i) + ".wav")));
+
+    int j = 1;
+    do{
+	ofSoundPlayer newSound;
+	newSound.load("Audios/Si" + ofToString(j) + ".mp3");
+	siCruzaSounds.push_back(newSound);
+    }while(ofFile::doesFileExist(ofToDataPath("Audios/Si" + ofToString(++j) + ".mp3")));
+
+    int k = 1;
+    do{
+	ofSoundPlayer newSound;
+	newSound.load("Audios/No" + ofToString(k) + ".mp3");
+	noCruzaSounds.push_back(newSound);
+    }while(ofFile::doesFileExist(ofToDataPath("Audios/No" + ofToString(++k) + ".mp3")));
+
+
     width = videoSource.getWidth()*PROCESSING_SCALE;
     height = videoSource.getHeight()*PROCESSING_SCALE;
 
@@ -57,7 +79,7 @@ void ofApp::setup() {
     vehiclesMoving=VEHICLE_TIMEOUT;
     
     stopSoundPlay=true;
-    stopSoundTimer=0.0f;
+    stopSoundTimer=STOP_PERIOD;
     startSoundTimer=START_PERIOD;
     
     ofEnableAlphaBlending();
@@ -70,6 +92,8 @@ void ofApp::setup() {
 	//pinMode(0,OUTPUT);
     //}
     
+    holaSounds[ofRandom(holaSounds.size())].play();
+
     time = ofGetElapsedTimef();
 }
 
@@ -115,12 +139,12 @@ void ofApp::update() {
         flowLeft.erode();
         
         contourFinderRight.findContours(flowRight,
-                                        width*height*0.05f,
+                                        width*height*0.025f,
                                         width*height*0.90f,
                                         10,
                                         false);
         contourFinderLeft.findContours(flowLeft,
-                                       width*height*0.05f,
+                                       width*height*0.025f,
                                        width*height*0.90f,
                                        10,
                                        false);
@@ -139,7 +163,7 @@ void ofApp::update() {
         std::sort(blobAreas.begin(),blobAreas.end());
         
         //this means the biggest blob found is most probably also the background
-        if(blobAreas.size() && blobAreas.front() > (width*height*0.45f)){
+        if(blobAreas.size() && blobAreas.front() > (width*height*0.35f)){
             backgroundMoving = BACKGROUND_TIMEOUT;
             accumulatedArea -= blobAreas.front();
         }
@@ -165,13 +189,17 @@ void ofApp::update() {
     }
     
     if(backgroundMoving>0 || vehiclesMoving>0){
-        if(!stopSoundPlay)
-            stopSoundTimer=0.0f;
+        if(!stopSoundPlay){
+            stopSoundTimer=STOP_PERIOD*2;
+	    noCruzaSounds[ofRandom(noCruzaSounds.size())].play();
+        }
         stopSoundPlay=true;
     }
     else{
-        if(stopSoundPlay)
-            startSoundTimer = START_PERIOD;
+        if(stopSoundPlay){
+            startSoundTimer = START_PERIOD*2;
+            siCruzaSounds[ofRandom(siCruzaSounds.size())].play();
+	}
         stopSoundPlay=false;
     }
     if(stopSoundPlay){
