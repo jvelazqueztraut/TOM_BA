@@ -1,4 +1,5 @@
 #include "ofApp.h"
+//#include <wiringPi.h>
 
 #define BACKGROUND_TIMEOUT 0.5f
 #define VEHICLE_TIMEOUT 1.0f
@@ -6,7 +7,7 @@
 #define STOP_PERIOD 2.0f
 #define START_PERIOD 1.0f
 
-#define PROCESSING_SCALE 0.25f
+#define PROCESSING_SCALE 0.5f
 
 //--------------------------------------------------------------
 void ofApp::setup() {
@@ -18,11 +19,11 @@ void ofApp::setup() {
     omxCameraSettings.height = 360;
     omxCameraSettings.framerate = 30;
     omxCameraSettings.enablePixels = true;
-#ifdef _DEBUG
+//#ifdef _DEBUG
     omxCameraSettings.enableTexture = true;
-#else
-    omxCameraSettings.enableTexture = false;
-#endif
+//#else
+//    omxCameraSettings.enableTexture = false;
+//#endif
     videoSource.setup(omxCameraSettings);
 #else
     videoSource.load("TOM_Original_480p.mov");
@@ -64,6 +65,10 @@ void ofApp::setup() {
     ofBackground(0);
     
     ofSetWindowShape(width*2, height*2);
+
+    //if( wiringPiSetup() != -1 ){
+	//pinMode(0,OUTPUT);
+    //}
     
     time = ofGetElapsedTimef();
 }
@@ -92,7 +97,7 @@ void ofApp::update() {
         
         flow.begin();
         ofClear(0,0);
-        flowSolver.drawColored(width, height, 10, 3);
+        flowSolver.drawColored(width, height, 3, 3);
         flow.end();
         
         flow.readToPixels(flowPixels);
@@ -100,8 +105,8 @@ void ofApp::update() {
         flowRight.setFromPixels(flowPixels.getChannel(0));
         flowLeft.setFromPixels(flowPixels.getChannel(2));
         
-        flowRight.threshold(50);
-        flowLeft.threshold(50);
+        flowRight.threshold(100);
+        flowLeft.threshold(100);
         
         flowRight.dilate();
         flowRight.erode();
@@ -183,6 +188,13 @@ void ofApp::update() {
             startSoundTimer = START_PERIOD;
         }
     }
+
+	/*if(stopSoundPlay){
+		digitalWrite(0,HIGH);
+	}
+	else{
+		digitalWrite(0,LOW);
+	}*/
     
 }
 
